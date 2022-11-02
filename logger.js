@@ -5,6 +5,10 @@ require("colors");
 const info = (name, message) =>
 	console.log(`${"[INFO]".red} [${name.green}] => ${message}`);
 
+// Debug
+const debug = (name, message) =>
+	console.log(`${"[DEBUG]".red} [${name.green}] => ${message}`);
+
 // Error
 const error = (name, message) =>
 	console.log(`${"[ERROR]".red} [${name.green}] => ${message}`);
@@ -16,6 +20,7 @@ const success = (name, message) =>
 // Export
 module.exports = {
 	info,
+    debug,
 	error,
 	success,
 };
