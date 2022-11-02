@@ -20,7 +20,7 @@ const success = (name, message) =>
 // Export
 module.exports = {
 	info,
-    debug,
+	debug,
 	error,
 	success,
 };
