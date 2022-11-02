@@ -110,39 +110,49 @@ client.on("guildMemberUpdate", async (oldInfo, newInfo) => {
 		},
 	];
 
-	newInfo.roles.cache
-		.map((role) => role.id)
-		.forEach((role) => {
-			const roleData = allowedRoles.filter((data) => data.id === role);
+	if (newInfo.guild.id === "1001583335191093278") {
+		if (newInfo.user.bot) return;
+		else {
+			newInfo.roles.cache
+				.map((role) => role.id)
+				.forEach((role) => {
+					const roleData = allowedRoles.filter(
+						(data) => data.id === role
+					);
 
-			if (!roleData[0]) return;
+					if (!roleData[0]) return;
+					else
+						roles.push(
+							roleData[0].name.toUpperCase().replaceAll(" ", "_")
+						);
+				});
+
+			const data = await database.User.getUser(newInfo.id);
+
+			if (!data)
+				await database.User.createUser(
+					newInfo.id,
+					newInfo.user.username,
+					"None",
+					newInfo.displayAvatarURL(),
+					roles,
+					[],
+					[]
+				);
 			else
-				roles.push(roleData[0].name.toUpperCase().replaceAll(" ", "_"));
-		});
-
-	const data = await database.User.getUser(newInfo.id);
-
-	if (!data)
-		await database.User.createUser(
-			newInfo.id,
-			newInfo.user.username,
-			"None",
-			newInfo.displayAvatarURL(),
-			roles,
-			[],
-			[]
-		);
-	else
-		await database.User.updateUser(
-			newInfo.id,
-			newInfo.user.username,
-			data.bio,
-			newInfo.displayAvatarURL(),
-			roles,
-			data.flags,
-			data.badges,
-			data.onboarding
-		);
+				await database.User.updateUser(
+					newInfo.id,
+					newInfo.user.username,
+					data.bio,
+					newInfo.displayAvatarURL(),
+					roles,
+					data.flags,
+					data.badges,
+					data.onboarding,
+					data.notifications
+				);
+		}
+	}
 });
 
 // Discord Interaction Event
