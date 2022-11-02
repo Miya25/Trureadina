@@ -13,32 +13,76 @@ module.exports = {
 
 			if (notifications.length === 0)
 				return interaction.reply({
-					content: "You do not have any notifications!",
+					embeds: [
+						new client.EmbedBuilder()
+							.setTitle("Notifications")
+							.setColor("Random")
+							.setDescription(
+								"You don't have any notifications!"
+							),
+					],
+					ephemeral: true,
 				});
 			else {
-				const embed = new client.embedBuilder()
+				let count = 0;
+				let data = "";
+
+				notifications.forEach((notification) => {
+					if (notification.read) return;
+
+					count = count + 1;
+
+					data =
+						data +
+						`${count}.\n\tTitle: ${
+							notification.title
+						}\n\tSummary: ${
+							notification.summary
+						}\n\tTags: ${notification.tags.join(",")}\n\n`;
+				});
+
+				if (data === "")
+					return interaction.reply({
+						embeds: [
+							new client.EmbedBuilder()
+								.setTitle("Notifications")
+								.setColor("Random")
+								.setDescription(
+									"You do not have any unread notifications!"
+								),
+						],
+						ephemeral: true,
+					});
+
+				const embed = new client.EmbedBuilder()
 					.setTitle("Notifications")
 					.setColor("Random")
-					.setDescription(
-						`${notifications
-							.map((notification) => {
-								return `-\n\tTitle: ${
-									notification.title
-								}\n\tSummary: ${
-									notification.summary
-								}\n\tTags: ${notification.tags.join(",")}`;
-							})
-							.join("\n\n")}`
-					);
+					.setDescription(data);
+
+				const buttons = new ActionRowBuilder().addComponents(
+					new ButtonBuilder()
+						.setCustomId("readAllNotifications")
+						.setLabel("Mark all as Read")
+						.setStyle(ButtonStyle.Danger)
+				);
 
 				return interaction.reply({
 					embeds: [embed],
+					components: [buttons],
+					ephemeral: true,
 				});
 			}
 		} else
 			return interaction.reply({
-				content:
-					"Uh oh, it looks like you cannot be found in our database!",
+				embeds: [
+					new client.EmbedBuilder()
+						.setTitle("Notifications")
+						.setColor("Random")
+						.setDescription(
+							"Uh oh, it looks like you cannot be found in our database!"
+						),
+				],
+				ephemeral: true,
 			});
 	},
 };
