@@ -38,10 +38,10 @@ client.once("ready", async () => {
 });
 
 // Discord Debug Event
-client.on("debug", (info) => logger.info("Discord Debug", info));
+client.on("debug", (info) => logger.debug("Discord", info));
 
 // Discord Error Event
-client.on("error", (error) => logger.error("Discord Error", error));
+client.on("error", (error) => logger.error("Discord", error));
 
 // Commands
 client.commands = new Map();
