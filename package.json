@@ -1,0 +1,27 @@
+{
+	"name": "discord-bot",
+	"version": "0.0.1",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"start": "node index",
+		"deploy": "node deploy",
+		"format": "prettier --write --plugin-search-dir=. ."
+	},
+	"keywords": [],
+	"author": "selectdev",
+	"dependencies": {
+		"@discordjs/proxy": "^1.2.0",
+		"@discordjs/rest": "^1.1.0",
+		"colors": "^1.4.0",
+		"discord-api-types": "^0.37.9",
+		"discord.js": "^14.3.0",
+		"dotenv": "^16.0.2",
+		"node-fetch": "^2.6.7",
+		"pg": "^8.8.0",
+		"sequelize": "^6.24.0"
+	},
+	"devDependencies": {
+		"prettier": "2.7.1"
+	}
+}
