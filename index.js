@@ -6,6 +6,7 @@ const {
 	codeBlock,
 	EmbedBuilder,
 } = require("discord.js");
+const crypto = require("crypto");
 const fetch = require("node-fetch");
 const fs = require("node:fs");
 const logger = require("./logger");
