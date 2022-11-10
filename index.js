@@ -17,7 +17,7 @@ require("dotenv").config();
 
 // Create Discord Client
 const client = new Client({
-	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
 });
 
 // Discord Client Additions
