@@ -145,6 +145,40 @@ client.on("guildMemberUpdate", async (oldInfo, newInfo) => {
 		);
 });
 
+// Discord Message Create Event
+client.on("messageCreate", async (message) => {
+	let allUsers = await database.User.listAll();
+
+	allUsers.forEach(async (user) => {
+		let sessions = user.onboarding;
+
+		let session = sessions.filter(
+			(session) => session.server_id === message.guild.id
+		);
+		if (!session[0]) return;
+
+		if (sessions[0].uuid === session[0].uuid) {
+			sessions[0].messages.push({
+				user: `${message.author.username}#${message.author.discriminator}`,
+				bot: message.author.bot,
+				message: message.content,
+				time: message.createdAt,
+			});
+
+			await database.User.updateUser(
+				user.user_id,
+				user.username,
+				user.bio,
+				user.avatar,
+				user.roles,
+				user.flags,
+				user.badges,
+				sessions
+			);
+		}
+	});
+});
+
 // Discord Interaction Event
 client.on("interactionCreate", async (interaction) => {
 	// Block banned users
