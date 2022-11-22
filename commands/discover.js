@@ -1,17 +1,13 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { Pagination } = require("../pagination/dist/index.js");
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName("queue")
-		.setDescription("View the Select List queue"),
+		.setName("discover")
+		.setDescription("Discover bots!"),
 	async execute(client, interaction, database) {
-		let bots = await database.Bots.listAll();
-
-		bots = bots.filter(
-			(bot) => bot.state === "AWAITING_REVIEW" || bot.state === "CLAIMED"
-		);
+		let allBots = await database.Bots.listAll();
+		allBots = allBots.filter((bot) => bot.state === "APPROVED");
 
 		const limit = (value) => {
 			let max_chars = 130;
@@ -26,7 +22,7 @@ module.exports = {
 			return i;
 		};
 
-		const embeds = bots.map((page) => {
+		const embeds = allBots.map((page) => {
 			return new client.EmbedBuilder().setColor("Random").addFields([
 				{
 					name: "Username",
@@ -44,26 +40,32 @@ module.exports = {
 					inline: false,
 				},
 				{
-					name: "State",
-					value: String(page.state.replaceAll("_", " ")),
+					name: "Long Description",
+					value: String(limit(page.long_description)),
 					inline: false,
 				},
 				{
-					name: "Primary Owner",
-					value: `<@${page.owner}>`,
+					name: "Flags",
+					value: String(
+						`\n\t- ${
+							page.flags.join("\n\t- ").replaceAll("_", " ") ||
+							"None"
+						}`
+					),
 					inline: false,
+				},
+				{
+					name: "Owner(s)",
+					value: String(
+						`Primary: ${page.owner}\nExtra Owners: \n\t- ${
+							page.extra_owners.join("\n\t- ") || "None"
+						}`
+					),
 				},
 			]);
 		});
 
-		const buttons = [
-			new ButtonBuilder()
-				.setCustomId(`claim-${bots[0].bot_id}`)
-				.setLabel(`Claim`)
-				.setStyle(ButtonStyle.Danger),
-		];
-
-		await new Pagination(interaction, embeds, "Page", buttons).paginate();
+		await new Pagination(interaction, embeds, "Page").paginate();
 	},
 	async autocomplete(interaction, database) {},
 };

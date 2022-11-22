@@ -1,17 +1,22 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const Panel_Logging = require("../panel_logs");
 const crypto = require("node:crypto");
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName("claim")
-		.setDescription("Claim a Bot")
+		.setName("approve")
+		.setDescription("Approve a Bot")
 		.addStringOption((option) =>
 			option
 				.setName("bot")
 				.setDescription("Choose the bot")
 				.setAutocomplete(true)
+				.setRequired(true)
+		)
+		.addStringOption((option) =>
+			option
+				.setName("reason")
+				.setDescription("Reason for approval")
 				.setRequired(true)
 		),
 	async execute(client, interaction, database) {
@@ -34,20 +39,22 @@ module.exports = {
 			const bot = await database.Bots.getBot(
 				interaction.options.getString("bot")
 			);
+			const reason = interaction.options.getString("reason");
+
 			if (!bot)
 				return interaction.reply(
-					"Sorry, that bot cannot be claimed as it does not exist."
+					"Sorry, that bot cannot be approved as it does not exist."
 				);
 
-			if (bot.state === "AWAITING_REVIEW") {
+			if (bot.state === "CLAIMED") {
 				// The bot can be claimed.
 				let audit_logs = [];
 				bot.audit_logs.forEach((log) => audit_logs.push(log));
 
 				audit_logs.push({
 					uuid: crypto.randomUUID(),
-					action: "CLAIMED",
-					reason: null,
+					action: "APPROVED",
+					reason: reason,
 					user: interaction.user.id,
 				});
 
@@ -57,7 +64,7 @@ module.exports = {
 					bot.username,
 					bot.description,
 					bot.long_description,
-					"CLAIMED",
+					"APPROVED",
 					bot.flags,
 					bot.owner,
 					bot.extra_owners,
@@ -72,40 +79,22 @@ module.exports = {
 							client,
 							interaction,
 							bot,
-							0,
-							"Reason cannot be supplied, for the Claim action!"
+							2,
+							reason
 						).render();
 
 						return interaction.reply(
-							"Congrats! You have claimed this bot."
+							"Congrats! You have approved this bot."
 						);
 					})
 					.catch((err) => {
 						return interaction.reply(
-							`An error occured while trying to claim this bot.\n\`\`\`${err}\`\`\``
+							`An error occured while trying to approve this bot.\n\`\`\`${err}\`\`\``
 						);
 					});
-			} else if (bot.state === "CLAIMED") {
-				// The bot can be claimed, but will have to be unclaimed first.
-				const currentReviewer = bot.audit_logs.filter(
-					(log) => log.action === "CLAIMED"
-				)[0];
-
-				const row = new ActionRowBuilder().addComponents(
-					new ButtonBuilder()
-						.setCustomId(`forceClaim-${bot.bot_id}`)
-						.setLabel("Force Claim")
-						.setStyle(ButtonStyle.Danger)
-				);
-
-				return interaction.reply({
-					content: `<@${currentReviewer.user}> already has claimed this bot.`,
-					components: [row],
-					allowedMentions: [],
-				});
 			} else
 				return interaction.reply(
-					"Sorry, this bot cannot be claimed as it is not in the queue."
+					"Sorry, this bot cannot be approved as it is not in the queue or was not claimed."
 				);
 		} else
 			return interaction.reply(
@@ -116,9 +105,7 @@ module.exports = {
 		const focusedValue = interaction.options.getFocused();
 
 		const bots = await database.Bots.listAll();
-		const choices = bots.filter(
-			(bot) => bot.state === "AWAITING_REVIEW" || bot.state === "CLAIMED"
-		);
+		const choices = bots.filter((bot) => bot.state === "CLAIMED");
 
 		if (focusedValue === "") {
 			let len = 0;
@@ -134,10 +121,7 @@ module.exports = {
 
 			await interaction.respond(
 				data.map((choice) => ({
-					name: `${choice.username} [${choice.state.replaceAll(
-						"_",
-						" "
-					)}]`,
+					name: `${choice.username}`,
 					value: choice.bot_id,
 				}))
 			);
@@ -148,10 +132,7 @@ module.exports = {
 
 			await interaction.respond(
 				filtered.map((choice) => ({
-					name: `${choice.username} [${choice.state.replaceAll(
-						"_",
-						" "
-					)}]`,
+					name: `${choice.username}`,
 					value: choice.bot_id,
 				}))
 			);

@@ -40,4 +40,5 @@ module.exports = {
 			embeds: [embed],
 		});
 	},
+	async autocomplete(interaction, database) {},
 };

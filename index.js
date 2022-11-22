@@ -5,19 +5,26 @@ const {
 	ActivityType,
 	codeBlock,
 	EmbedBuilder,
+	Events,
 } = require("discord.js");
 const crypto = require("crypto");
 const fetch = require("node-fetch");
 const fs = require("node:fs");
 const logger = require("./logger");
 const database = require("./database/handler");
+const Panel_Logging = require("./panel_logs");
 
 // Environment Variables
 require("dotenv").config();
 
 // Create Discord Client
 const client = new Client({
-	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+	intents: [
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMembers,
+		GatewayIntentBits.GuildMessages,
+		GatewayIntentBits.MessageContent,
+	],
 });
 
 // Discord Client Additions
@@ -27,9 +34,9 @@ client.codeBlock = codeBlock;
 client.fetch = fetch;
 
 // Discord Ready Event
-client.once("ready", async () => {
-	client.user.setActivity("our Developer build", {
-		type: ActivityType.Listening,
+client.once(Events.ClientReady, async () => {
+	client.user.setActivity("Select List", {
+		type: ActivityType.Watching,
 	});
 
 	client.user.setStatus("idle");
@@ -38,10 +45,10 @@ client.once("ready", async () => {
 });
 
 // Discord Debug Event
-client.on("debug", (info) => logger.debug("Discord", info));
+client.on(Events.Debug, (info) => logger.debug("Discord", info));
 
 // Discord Error Event
-client.on("error", (error) => logger.error("Discord", error));
+client.on(Events.Error, (error) => logger.error("Discord", error));
 
 // Commands
 client.commands = new Map();
@@ -77,7 +84,7 @@ for (const file of modalFiles) {
 }
 
 // Discord Guild Member Update Event
-client.on("guildMemberUpdate", async (oldInfo, newInfo) => {
+client.on(Events.GuildMemberUpdate, async (oldInfo, newInfo) => {
 	const roles = [];
 	const allowedRoles = [
 		{
@@ -111,7 +118,7 @@ client.on("guildMemberUpdate", async (oldInfo, newInfo) => {
 	];
 
 	if (newInfo.guild.id === "1001583335191093278") {
-		if (newInfo.user.bot) return;
+		if (newInfo.user.bot || newInfo.user.system) return;
 		else {
 			newInfo.roles.cache
 				.map((role) => role.id)
@@ -152,11 +159,11 @@ client.on("guildMemberUpdate", async (oldInfo, newInfo) => {
 					data.notifications
 				);
 		}
-	}
+	} else return;
 });
 
 // Discord Message Create Event
-client.on("messageCreate", async (message) => {
+client.on(Events.MessageCreate, async (message) => {
 	let allUsers = await database.User.listAll();
 
 	allUsers.forEach(async (user) => {
@@ -183,14 +190,15 @@ client.on("messageCreate", async (message) => {
 				user.roles,
 				user.flags,
 				user.badges,
-				sessions
+				sessions,
+				user.notifications
 			);
 		}
 	});
 });
 
 // Discord Interaction Event
-client.on("interactionCreate", async (interaction) => {
+client.on(Events.InteractionCreate, async (interaction) => {
 	// Block banned users
 	const bannedUsers = client.bannedUsers;
 	if (bannedUsers.includes(interaction.user.id)) return;
@@ -222,63 +230,176 @@ client.on("interactionCreate", async (interaction) => {
 	if (interaction.isButton()) {
 		const button = client.buttons.get(interaction.customId);
 
+		if (interaction.customId.startsWith("claim")) {
+			const bot_id = interaction.customId.replace("claim-", "");
+
+			// Only allow staff members to use this command.
+			const user = await database.User.getUser(interaction.user.id);
+
+			if (!user)
+				return interaction.reply(
+					"You do not have enough permissions to use this button."
+				); // User does not exist.
+
+			if (
+				user.roles.includes("OWNER") ||
+				user.roles.includes("ADMINISTRATOR") ||
+				user.roles.includes("STAFF_MANAGER") ||
+				user.roles.includes("DEVELOPER") ||
+				user.roles.includes("MODERATOR") ||
+				user.roles.includes("BOT_REVIEWER")
+			) {
+				const bot = await database.Bots.getBot(bot_id);
+				if (!bot)
+					return interaction.reply(
+						"Sorry, that bot cannot be claimed as it does not exist."
+					);
+
+				if (bot.state === "AWAITING_REVIEW") {
+					let audit_logs = [];
+					bot.audit_logs.forEach((log) => audit_logs.push(log));
+
+					audit_logs.push({
+						uuid: crypto.randomUUID(),
+						action: "CLAIMED",
+						reason: null,
+						user: interaction.user.id,
+					});
+
+					await database.Bots.updateBot(
+						bot.bot_id,
+						bot.avatar,
+						bot.username,
+						bot.description,
+						bot.long_description,
+						"CLAIMED",
+						bot.flags,
+						bot.owner,
+						bot.extra_owners,
+						bot.library,
+						bot.nsfw,
+						bot.tags,
+						bot.invite,
+						audit_logs
+					)
+						.then(() => {
+							new Panel_Logging(
+								client,
+								interaction,
+								bot,
+								0,
+								"Reason cannot be supplied, for the Claim action!"
+							).render();
+
+							return interaction.reply(
+								"This bot has been claimed!"
+							);
+						})
+						.catch((err) => {
+							return interaction.reply(
+								`An error occured while trying to claim this bot.\n\`\`\`${err}\`\`\``
+							);
+						});
+				} else
+					return interaction.reply(
+						"Sorry, this bot cannot be claimed as it is not in the queue."
+					);
+			} else
+				return interaction.reply(
+					"You do not have enough permissions to use this button."
+				);
+		}
+
 		if (interaction.customId.startsWith("forceClaim")) {
 			const bot_id = interaction.customId.replace("forceClaim-", "");
 
-			const bot = await database.Bots.getBot(bot_id);
-			if (!bot)
+			// Only allow staff members to use this command.
+			const user = await database.User.getUser(interaction.user.id);
+
+			if (!user)
 				return interaction.reply(
-					"Sorry, that bot cannot be claimed as it does not exist."
-				);
+					"You do not have enough permissions to use this button."
+				); // User does not exist.
 
-			if (!bot.state === "AWAITING_REVIEW" || !bot.state === "CLAIMED")
+			if (
+				user.roles.includes("OWNER") ||
+				user.roles.includes("ADMINISTRATOR") ||
+				user.roles.includes("STAFF_MANAGER") ||
+				user.roles.includes("DEVELOPER") ||
+				user.roles.includes("MODERATOR") ||
+				user.roles.includes("BOT_REVIEWER")
+			) {
+				const bot = await database.Bots.getBot(bot_id);
+				if (!bot)
+					return interaction.reply(
+						"Sorry, that bot cannot be force claimed as it does not exist."
+					);
+
+				if (bot.state === "CLAIMED") {
+					let audit_logs = [];
+					bot.audit_logs.forEach((log) => audit_logs.push(log));
+
+					audit_logs.push({
+						uuid: crypto.randomUUID(),
+						action: "CLAIMED",
+						reason: null,
+						user: interaction.user.id,
+					});
+
+					audit_logs.push({
+						uuid: crypto.randomUUID(),
+						action: "UNCLAIMED",
+						reason: "FORCE CLAIMED",
+						user: interaction.user.id,
+					});
+
+					await database.Bots.updateBot(
+						bot.bot_id,
+						bot.avatar,
+						bot.username,
+						bot.description,
+						bot.long_description,
+						"CLAIMED",
+						bot.flags,
+						bot.owner,
+						bot.extra_owners,
+						bot.library,
+						bot.nsfw,
+						bot.tags,
+						bot.invite,
+						audit_logs
+					)
+						.then(() => {
+							new Panel_Logging(
+								client,
+								interaction,
+								bot,
+								0,
+								"Force Claimed"
+							).render();
+
+							return interaction.reply(
+								"This bot has been force claimed!"
+							);
+						})
+						.catch((err) => {
+							return interaction.reply(
+								`An error occured while trying to claim this bot.\n\`\`\`${err}\`\`\``
+							);
+						});
+				} else
+					return interaction.reply(
+						"Sorry, this bot cannot be claimed as it is not in the queue."
+					);
+			} else
 				return interaction.reply(
-					"Sorry, this bot cannot be claimed as it is not in the queue."
+					"You do not have enough permissions to use this button."
 				);
-
-			let audit_logs = [];
-			bot.audit_logs.forEach((log) => audit_logs.push(log));
-
-			audit_logs.push({
-				uuid: crypto.randomUUID(),
-				action: "CLAIMED",
-				reason: null,
-				user: interaction.user.id,
-			});
-
-			audit_logs.push({
-				uuid: crypto.randomUUID(),
-				action: "UNCLAIMED",
-				reason: "FORCE CLAIMED",
-				user: interaction.user.id,
-			});
-
-			await database.Bots.updateBot(
-				bot.bot_id,
-				bot.username,
-				bot.description,
-				bot.long_description,
-				"CLAIMED",
-				bot.flags,
-				bot.owner,
-				bot.extra_owners,
-				bot.library,
-				bot.nsfw,
-				bot.tags,
-				bot.invite,
-				audit_logs
-			)
-				.then(() => {
-					return interaction.reply(
-						"This bot has been force claimed!"
-					);
-				})
-				.catch((err) => {
-					return interaction.reply(
-						`An error occured while trying to claim this bot.\n\`\`\`${err}\`\`\``
-					);
-				});
-		} else {
+		} else if (
+			["⏮️", "◀️", "⏹️", "▶️", "⏭️"].includes(interaction.customId)
+		)
+			return;
+		else {
 			if (!button)
 				return interaction.reply(
 					"It seems that the button that you are trying to use, has not been created yet."
@@ -318,6 +439,27 @@ client.on("interactionCreate", async (interaction) => {
 					"js",
 					error
 				)}`
+			);
+		}
+	}
+
+	// Autocomplete
+	if (interaction.isAutocomplete()) {
+		const command = interaction.client.commands.get(
+			interaction.commandName
+		);
+		if (!command)
+			return logger.error(
+				`Autocomplete (${interaction.commandName})`,
+				"Unknown Error"
+			);
+
+		try {
+			await command.autocomplete(interaction, database);
+		} catch (error) {
+			return logger.error(
+				`Autocomplete (${interaction.commandName})`,
+				error
 			);
 		}
 	}

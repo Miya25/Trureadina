@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
+const { Pagination } = require("../pagination/dist/index.js");
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 
 module.exports = {
@@ -24,24 +25,11 @@ module.exports = {
 					ephemeral: true,
 				});
 			else {
-				let count = 0;
-				let data = "";
+				const data = notifications.filter(
+					(notification) => notification.read === false
+				);
 
-				notifications.forEach((notification) => {
-					if (notification.read) return;
-
-					count = count + 1;
-
-					data =
-						data +
-						`${count}.\n\tTitle: ${
-							notification.title
-						}\n\tSummary: ${
-							notification.summary
-						}\n\tTags: ${notification.tags.join(",")}\n\n`;
-				});
-
-				if (data === "")
+				if (data.length === 0)
 					return interaction.reply({
 						embeds: [
 							new client.EmbedBuilder()
@@ -51,26 +39,56 @@ module.exports = {
 									"You do not have any unread notifications!"
 								),
 						],
-						ephemeral: true,
+						components: [
+							new ActionRowBuilder({
+								components: [
+									new ButtonBuilder()
+										.setCustomId("unreadAllNotifications")
+										.setLabel("Mark all as Unread")
+										.setStyle(ButtonStyle.Danger),
+								],
+							}),
+						],
 					});
 
-				const embed = new client.EmbedBuilder()
-					.setTitle("Notifications")
-					.setColor("Random")
-					.setDescription(data);
+				const embeds = data.map((page) => {
+					let tags = page.tags.join(", ");
+					if (tags === "") tags = "None";
 
-				const buttons = new ActionRowBuilder().addComponents(
+					return new client.EmbedBuilder()
+						.setColor("Random")
+						.addFields([
+							{
+								name: "Title",
+								value: String(page.title),
+								inline: false,
+							},
+							{
+								name: "Summary",
+								value: String(page.summary),
+								inline: false,
+							},
+							{
+								name: "Tags",
+								value: tags,
+								inline: false,
+							},
+						]);
+				});
+
+				const buttons = [
 					new ButtonBuilder()
 						.setCustomId("readAllNotifications")
 						.setLabel("Mark all as Read")
-						.setStyle(ButtonStyle.Danger)
-				);
+						.setStyle(ButtonStyle.Danger),
+				];
 
-				return interaction.reply({
-					embeds: [embed],
-					components: [buttons],
-					ephemeral: true,
-				});
+				await new Pagination(
+					interaction,
+					embeds,
+					"Notification",
+					buttons
+				).paginate();
 			}
 		} else
 			return interaction.reply({
@@ -85,4 +103,5 @@ module.exports = {
 				ephemeral: true,
 			});
 	},
+	async autocomplete(interaction, database) {},
 };

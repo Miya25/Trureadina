@@ -1,23 +1,27 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const Panel_Logging = require("../panel_logs");
 const crypto = require("node:crypto");
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName("claim")
-		.setDescription("Claim a Bot")
+		.setName("unclaim")
+		.setDescription("Unclaim a Bot")
 		.addStringOption((option) =>
 			option
 				.setName("bot")
 				.setDescription("Choose the bot")
 				.setAutocomplete(true)
 				.setRequired(true)
+		)
+		.addStringOption((option) =>
+			option
+				.setName("reason")
+				.setDescription("Why are you unclaiming this bot?")
+				.setRequired(true)
 		),
 	async execute(client, interaction, database) {
 		// Only allow staff members to use this command.
 		const user = await database.User.getUser(interaction.user.id);
-
 		if (!user)
 			return interaction.reply(
 				"You do not have enough permissions to use this command."
@@ -31,23 +35,25 @@ module.exports = {
 			user.roles.includes("MODERATOR") ||
 			user.roles.includes("BOT_REVIEWER")
 		) {
+			const reason = interaction.options.getString("reason");
+
 			const bot = await database.Bots.getBot(
 				interaction.options.getString("bot")
 			);
 			if (!bot)
 				return interaction.reply(
-					"Sorry, that bot cannot be claimed as it does not exist."
+					"Sorry, that bot cannot be unclaimed as it does not exist."
 				);
 
-			if (bot.state === "AWAITING_REVIEW") {
-				// The bot can be claimed.
+			if (bot.state === "CLAIMED") {
+				// The bot can be unclaimed.
 				let audit_logs = [];
 				bot.audit_logs.forEach((log) => audit_logs.push(log));
 
 				audit_logs.push({
 					uuid: crypto.randomUUID(),
-					action: "CLAIMED",
-					reason: null,
+					action: "UNCLAIMED",
+					reason: reason,
 					user: interaction.user.id,
 				});
 
@@ -57,7 +63,7 @@ module.exports = {
 					bot.username,
 					bot.description,
 					bot.long_description,
-					"CLAIMED",
+					"AWAITING_REVIEW",
 					bot.flags,
 					bot.owner,
 					bot.extra_owners,
@@ -72,40 +78,22 @@ module.exports = {
 							client,
 							interaction,
 							bot,
-							0,
-							"Reason cannot be supplied, for the Claim action!"
+							1,
+							reason
 						).render();
 
 						return interaction.reply(
-							"Congrats! You have claimed this bot."
+							"This bot has been unclaimed!"
 						);
 					})
 					.catch((err) => {
 						return interaction.reply(
-							`An error occured while trying to claim this bot.\n\`\`\`${err}\`\`\``
+							`An error occured while trying to unclaim this bot.\n\`\`\`${err}\`\`\``
 						);
 					});
-			} else if (bot.state === "CLAIMED") {
-				// The bot can be claimed, but will have to be unclaimed first.
-				const currentReviewer = bot.audit_logs.filter(
-					(log) => log.action === "CLAIMED"
-				)[0];
-
-				const row = new ActionRowBuilder().addComponents(
-					new ButtonBuilder()
-						.setCustomId(`forceClaim-${bot.bot_id}`)
-						.setLabel("Force Claim")
-						.setStyle(ButtonStyle.Danger)
-				);
-
-				return interaction.reply({
-					content: `<@${currentReviewer.user}> already has claimed this bot.`,
-					components: [row],
-					allowedMentions: [],
-				});
 			} else
 				return interaction.reply(
-					"Sorry, this bot cannot be claimed as it is not in the queue."
+					"Sorry, this bot cannot be unclaimed as this bot is not claimed at this time."
 				);
 		} else
 			return interaction.reply(
@@ -116,9 +104,7 @@ module.exports = {
 		const focusedValue = interaction.options.getFocused();
 
 		const bots = await database.Bots.listAll();
-		const choices = bots.filter(
-			(bot) => bot.state === "AWAITING_REVIEW" || bot.state === "CLAIMED"
-		);
+		const choices = bots.filter((bot) => bot.state === "CLAIMED");
 
 		if (focusedValue === "") {
 			let len = 0;
@@ -134,10 +120,7 @@ module.exports = {
 
 			await interaction.respond(
 				data.map((choice) => ({
-					name: `${choice.username} [${choice.state.replaceAll(
-						"_",
-						" "
-					)}]`,
+					name: `${choice.username}`,
 					value: choice.bot_id,
 				}))
 			);
@@ -148,10 +131,7 @@ module.exports = {
 
 			await interaction.respond(
 				filtered.map((choice) => ({
-					name: `${choice.username} [${choice.state.replaceAll(
-						"_",
-						" "
-					)}]`,
+					name: `${choice.username}`,
 					value: choice.bot_id,
 				}))
 			);

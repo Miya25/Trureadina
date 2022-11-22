@@ -7,8 +7,8 @@ const {
 	PermissionsBitField,
 } = require("discord.js");
 
-// Start
-const start = async (client, interaction, database) => {
+// Init
+const init = async (client, interaction, database) => {
 	const user = await database.User.getUser(interaction.user.id);
 
 	if (user) {
@@ -19,7 +19,7 @@ const start = async (client, interaction, database) => {
 
 		if (session[0]) {
 			const embed = new client.EmbedBuilder()
-				.setTitle("Starting Onboarding Session!")
+				.setTitle("Initialize Onboarding Session!")
 				.setColor(0xff0000)
 				.setDescription("Creating your Onboarding session!");
 
@@ -35,14 +35,28 @@ const start = async (client, interaction, database) => {
 								name: "readme",
 							},
 							{
-								name: "onboard",
+								name: session[0].position
+									.toLowerCase()
+									.replaceAll("_", "-"),
+							},
+							{
+								name: "notes",
 							},
 						],
 						roles: [
 							{
-								id: 0,
+								id: 1,
 								name: session[0].position.replaceAll("_", " "),
 								color: "#FF0000",
+								hoist: true,
+								permissions: [
+									PermissionsBitField.Flags.Administrator,
+								],
+							},
+							{
+								id: 2,
+								name: "Under Review",
+								color: "#009bff",
 								hoist: true,
 								permissions: [
 									PermissionsBitField.Flags.Administrator,
@@ -51,52 +65,75 @@ const start = async (client, interaction, database) => {
 						],
 					});
 
-					const GuildChannel = Guild.channels.cache.find(
-						(channel) => channel.name === "readme"
+					const channels = {
+						onboard: Guild.channels.cache.find(
+							(channel) =>
+								channel.name ===
+								session[0].position
+									.toLowerCase()
+									.replaceAll("_", "-")
+						),
+						readme: Guild.channels.cache.find(
+							(channel) => channel.name === "readme"
+						),
+						notes: Guild.channels.cache.find(
+							(channel) => channel.name === "notes"
+						),
+					};
+
+					channels["readme"].send(
+						`Hello, <@${user.user_id}>. Welcome to Select List onboarding, it looks like you are wanting to become a ${session[0].position}. Let's see if you will meet our expectations, by going to <#${channels["onboard"].id}> and entering \`/onboard start\`!`
 					);
 
-					GuildChannel.createInvite({
-						maxAge: 0,
-						unique: true,
-						reason: "Onboarding session started!",
-					}).then(async (invite) => {
-						for (const i = 0; i < sessions.length; i++) {
-							if (sessions[i].uuid === session[0].uuid) {
-								sessions[i].server_id = Guild.id;
-								break;
+					channels["notes"].send(
+						"In this channel, you can take notes to help you through this onboarding process."
+					);
+
+					channels["readme"]
+						.createInvite({
+							maxAge: 0,
+							unique: true,
+							reason: "Onboarding session started!",
+							maxUses: 1,
+						})
+						.then(async (invite) => {
+							for (const i = 0; i < sessions.length; i++) {
+								if (sessions[i].uuid === session[0].uuid) {
+									sessions[i].server_id = Guild.id;
+									break;
+								}
 							}
-						}
 
-						await database.User.updateUser(
-							user.user_id,
-							user.username,
-							user.bio,
-							user.avatar,
-							user.roles,
-							user.flags,
-							user.badges,
-							sessions
-						);
-
-						const newEmbed = new client.EmbedBuilder()
-							.setTitle("Started Onboarding Session!")
-							.setColor(0xff0000)
-							.setDescription(
-								"Your onboarding session is ready!\nClick the button down below to start!"
+							await database.User.updateUser(
+								user.user_id,
+								user.username,
+								user.bio,
+								user.avatar,
+								user.roles,
+								user.flags,
+								user.badges,
+								sessions
 							);
 
-						const button = new ActionRowBuilder().addComponents(
-							new ButtonBuilder()
-								.setURL(invite.url)
-								.setLabel("Start Session!")
-								.setStyle(ButtonStyle.Link)
-						);
+							const newEmbed = new client.EmbedBuilder()
+								.setTitle("Initialized Onboarding Session!")
+								.setColor(0xff0000)
+								.setDescription(
+									"Your onboarding session is ready!\nClick the button down below to get started!"
+								);
 
-						interaction.editReply({
-							embeds: [newEmbed],
-							components: [button],
+							const button = new ActionRowBuilder().addComponents(
+								new ButtonBuilder()
+									.setURL(invite.url)
+									.setLabel("Start Session!")
+									.setStyle(ButtonStyle.Link)
+							);
+
+							interaction.editReply({
+								embeds: [newEmbed],
+								components: [button],
+							});
 						});
-					});
 				});
 		} else {
 			interaction.reply(
@@ -109,6 +146,9 @@ const start = async (client, interaction, database) => {
 		);
 	}
 };
+
+// Start
+const start = async (client, interaction, database) => {};
 
 // Approve
 const approve = async (client, interaction, database) => {
@@ -327,7 +367,7 @@ const register = async (client, interaction, database) => {
 						const embed = new client.EmbedBuilder()
 							.setTitle("Onboarding")
 							.setDescription(
-								`Hello there!\n<@${interaction.user.id}> has registered a onboarding session to see if you will be able to handle the "${position}" position for Select List.\n To start this onboarding session, please go to the Staff Center and run \`/onboarding start\` and follow the instructions!`
+								`Hello there!\n<@${interaction.user.id}> has registered a onboarding session to see if you will be able to handle the "${position}" position for Select List.\n To start this onboarding session, please go to the Staff Center and run \`/onboard init\` and follow the instructions!`
 							)
 							.setColor(0x0000ff);
 
@@ -416,7 +456,7 @@ const reset = async (client, interaction, database) => {
 						const embed = new client.EmbedBuilder()
 							.setTitle("Onboarding")
 							.setDescription(
-								`Hello there!\n<@${interaction.user.id}> has reset your onboarding session. Please run \`/onboard start\` whenever you are ready to restart the onboarding session!`
+								`Hello there!\n<@${interaction.user.id}> has reset your onboarding session. Please run \`/onboard init\` whenever you are ready to restart the onboarding session!`
 							)
 							.setColor(0x0000ff);
 
@@ -457,6 +497,7 @@ const reset = async (client, interaction, database) => {
 
 // Expose Functions
 module.exports = {
+	init,
 	start,
 	approve,
 	deny,

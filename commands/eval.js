@@ -78,4 +78,5 @@ module.exports = {
 				);
 		}
 	},
+	async autocomplete(interaction, database) {},
 };

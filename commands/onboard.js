@@ -1,5 +1,12 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { start, approve, deny, register, reset } = require("../onboarding");
+const {
+	init,
+	start,
+	approve,
+	deny,
+	register,
+	reset,
+} = require("../onboarding");
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -10,8 +17,13 @@ module.exports = {
 		.setDMPermission(false)
 		.addSubcommand((subcommand) =>
 			subcommand
+				.setName("init")
+				.setDescription("Initialize your Onboarding session")
+		)
+		.addSubcommand((subcommand) =>
+			subcommand
 				.setName("start")
-				.setDescription("Start a Onboarding session")
+				.setDescription("Start your Onboarding session")
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
@@ -64,10 +76,6 @@ module.exports = {
 							{
 								name: "Select Social Moderator",
 								value: "SELECT_SOCIAL_MODERATOR",
-							},
-							{
-								name: "Test Position",
-								value: "TEST_POSITION_9393",
 							}
 						)
 				)
@@ -89,6 +97,10 @@ module.exports = {
 		const subcommand = interaction.options.getSubcommand();
 
 		switch (subcommand) {
+			case "init":
+				await init(client, interaction, database);
+				break;
+
 			case "start":
 				await start(client, interaction, database);
 				break;
@@ -114,4 +126,5 @@ module.exports = {
 				break;
 		}
 	},
+	async autocomplete(interaction, database) {},
 };

@@ -82,12 +82,17 @@ module.exports = {
 
 				if (user) {
 					const embed = new client.EmbedBuilder()
-						.setTitle(`Viewing ${user.username}'s Profile`)
+						.setTitle(`Viewing Profile`)
 						.setColor("Random")
 						.setThumbnail(user.avatar)
 						.setFields(
 							{
-								name: "User ID",
+								name: "Username",
+								value: String(user.username),
+								inline: false,
+							},
+							{
+								name: "User Identifier",
 								value: String(user.user_id),
 								inline: false,
 							},
@@ -123,50 +128,84 @@ module.exports = {
 				user = await database.Bots.getBot(user.id);
 
 				if (user) {
-					const discordData = await client.users.fetch(user.bot_id);
-
-					const embed = new client.EmbedBuilder()
-						.setTitle(`Viewing "${user.username}"`)
-						.setColor("Random")
-						.setThumbnail(discordData.displayAvatarURL())
-						.setFields(
-							{
-								name: "Bot ID",
-								value: String(user.bot_id),
-								inline: false,
-							},
-							{
-								name: "Short Description",
-								value: String(user.description),
-								inline: false,
-							},
-							{
-								name: "State",
-								value: String(user.state.replaceAll("_", " ")),
-							},
-							{
-								name: "Flags",
-								value: String(
-									user.flags
-										.join(", ")
-										.replaceAll("_", " ") || "None"
-								),
-							},
-							{
-								name: "Owner(s)",
-								value: String(
-									`Primary: ${
-										user.owner
-									}\nExtra Owners: ${user.extra_owners.join(
-										", "
-									)}`
-								),
-							}
+					if (user.state != "APPROVED")
+						return interaction.followUp({
+							content:
+								"Sorry, that bot cannot be viewed here at this time!\nReason: The bot was denied, or not yet reviewed by a Select List Staff Member.",
+						});
+					else {
+						const discordData = await client.users.fetch(
+							user.bot_id
 						);
 
-					return interaction.followUp({
-						embeds: [embed],
-					});
+						const limit = (value) => {
+							let max_chars = 130;
+							let i;
+
+							const x = value.substr(0, max_chars);
+
+							if (value.length > max_chars)
+								i = `${x}... (${
+									value.length - max_chars
+								} characters removed)`;
+							else i = value;
+
+							return i;
+						};
+
+						const embed = new client.EmbedBuilder()
+							.setTitle(`Viewing Bot`)
+							.setColor("Random")
+							.setThumbnail(discordData.displayAvatarURL())
+							.setFields(
+								{
+									name: "Username",
+									value: String(user.username),
+									inline: false,
+								},
+								{
+									name: "Application Identifier",
+									value: String(user.bot_id),
+									inline: false,
+								},
+								{
+									name: "Short Description",
+									value: String(limit(user.description)),
+									inline: false,
+								},
+								{
+									name: "Long Description",
+									value: String(limit(user.long_description)),
+									inline: false,
+								},
+								{
+									name: "Flags",
+									value: String(
+										`\n\t- ${
+											user.flags
+												.join("\n\t- ")
+												.replaceAll("_", " ") || "None"
+										}`
+									),
+									inline: false,
+								},
+								{
+									name: "Owner(s)",
+									value: String(
+										`Primary: ${
+											user.owner
+										}\nExtra Owners: \n\t- ${
+											user.extra_owners.join("\n\t- ") ||
+											"None"
+										}`
+									),
+								}
+							);
+
+						return interaction.followUp({
+							embeds: [embed],
+						});
+					}
 				} else
 					return interaction.followUp({
 						content: "Error: That bot does not exist.",
@@ -174,4 +213,5 @@ module.exports = {
 			}
 		}
 	},
+	async autocomplete(interaction, database) {},
 };
