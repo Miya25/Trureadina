@@ -227,50 +227,86 @@ class Pagination {
 
 						this.index = newIndex;
 
-						if (
-							this.pages[this.index].data.fields.filter(
-								(p) => p.name === "State"
-							)[0].value === "CLAIMED"
-						) {
-							this.buttons[0].data.label = "Force Claim";
-							this.buttons[0].data.custom_id = `forceClaim-${
+						if (this.interaction.commandName === "queue") {
+							if (
 								this.pages[this.index].data.fields.filter(
-									(p) => p.name === "Application Identifier"
-								)[0].value
-							}`;
-						} else {
-							this.buttons[0].data.label = "Claim";
-							this.buttons[0].data.custom_id = `claim-${
-								this.pages[this.index].data.fields.filter(
-									(p) => p.name === "Application Identifier"
-								)[0].value
-							}`;
+									(p) => p.name === "State"
+								)[0].value === "CLAIMED"
+							) {
+								this.buttons[0].data.label = "Force Claim";
+								this.buttons[0].data.custom_id = `forceClaim-${
+									this.pages[this.index].data.fields.filter(
+										(p) =>
+											p.name === "Application Identifier"
+									)[0].value
+								}`;
+							} else {
+								this.buttons[0].data.label = "Claim";
+								this.buttons[0].data.custom_id = `claim-${
+									this.pages[this.index].data.fields.filter(
+										(p) =>
+											p.name === "Application Identifier"
+									)[0].value
+								}`;
+							}
+
+                            this.buttons[1].data.url = this.pages[this.index].data.fields.filter((p) => p.name === "Invite")[0].value;
 						}
+
+                        if (this.interaction.commandName === "discover") {
+                            this.buttons[0].data.url = this.pages[this.index].data.fields.filter((p) => p.name === "Invite")[0].value;
+                        }
 
 						const options = this.options || this.defaultOptions;
 
-						await i.update({
-							embeds: [this.pages[this.index]],
-							...(this.files && {
-								files: [this.files[this.index]],
-							}),
-							components: [
-								new ActionRowBuilder({
-									components: options.map((x, i) => {
-										return new ButtonBuilder({
-											emoji: x.emoji,
-											style: x.style,
-											type: 2,
-											label: x.label,
-											customId: availableEmojis[i],
-										});
+						if (
+							this.buttons === undefined ||
+							this.buttons === null ||
+							this.buttons.length === 0
+						) {
+							await i.update({
+								embeds: [this.pages[this.index]],
+								...(this.files && {
+									files: [this.files[this.index]],
+								}),
+								components: [
+									new ActionRowBuilder({
+										components: options.map((x, i) => {
+											return new ButtonBuilder({
+												emoji: x.emoji,
+												style: x.style,
+												type: 2,
+												label: x.label,
+												customId: availableEmojis[i],
+											});
+										}),
 									}),
+								],
+							});
+						} else {
+							await i.update({
+								embeds: [this.pages[this.index]],
+								...(this.files && {
+									files: [this.files[this.index]],
 								}),
-								new ActionRowBuilder({
-									components: this.buttons,
-								}),
-							],
-						});
+								components: [
+									new ActionRowBuilder({
+										components: options.map((x, i) => {
+											return new ButtonBuilder({
+												emoji: x.emoji,
+												style: x.style,
+												type: 2,
+												label: x.label,
+												customId: availableEmojis[i],
+											});
+										}),
+									}),
+									new ActionRowBuilder({
+										components: this.buttons,
+									}),
+								],
+							});
+						}
 					}
 			  });
 
