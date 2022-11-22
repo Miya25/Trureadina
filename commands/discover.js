@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { Pagination } = require("../pagination/dist/index.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -22,6 +23,10 @@ module.exports = {
 			return i;
 		};
 
+        generateInvite = (id) => {
+            return `https://discord.com/api/oauth2/authorize?client_id=${id}&permissions=0&scope=bot%20applications.commands`;
+        };
+
 		const embeds = allBots.map((page) => {
 			return new client.EmbedBuilder().setColor("Random").addFields([
 				{
@@ -40,11 +45,6 @@ module.exports = {
 					inline: false,
 				},
 				{
-					name: "Long Description",
-					value: String(limit(page.long_description)),
-					inline: false,
-				},
-				{
 					name: "Flags",
 					value: String(
 						`\n\t- ${
@@ -52,6 +52,11 @@ module.exports = {
 							"None"
 						}`
 					),
+					inline: false,
+				},
+                {
+					name: "Invite",
+					value: page.invite || generateInvite(page.bot_id),
 					inline: false,
 				},
 				{
@@ -65,7 +70,14 @@ module.exports = {
 			]);
 		});
 
-		await new Pagination(interaction, embeds, "Page").paginate();
+        const buttons = [
+            new ButtonBuilder()
+                .setURL(allBots[0].invite || generateInvite(allBots[0].bot_id))
+                .setLabel("Invite")
+                .setStyle(ButtonStyle.Link),
+        ];
+
+		await new Pagination(interaction, embeds, "Page", buttons).paginate();
 	},
 	async autocomplete(interaction, database) {},
 };
