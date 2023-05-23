@@ -108,10 +108,6 @@ client.on(Events.GuildMemberUpdate, async (oldInfo, newInfo) => {
 			id: "1001584438314008777",
 		},
 		{
-			name: "Select Social Moderator",
-			id: "1030233535941988505",
-		},
-		{
 			name: "Bot Reviewer",
 			id: "1001610329379328101",
 		},
