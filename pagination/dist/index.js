@@ -250,12 +250,20 @@ class Pagination {
 								}`;
 							}
 
-                            this.buttons[1].data.url = this.pages[this.index].data.fields.filter((p) => p.name === "Invite")[0].value;
+							this.buttons[1].data.url = this.pages[
+								this.index
+							].data.fields.filter(
+								(p) => p.name === "Invite"
+							)[0].value;
 						}
 
-                        if (this.interaction.commandName === "discover") {
-                            this.buttons[0].data.url = this.pages[this.index].data.fields.filter((p) => p.name === "Invite")[0].value;
-                        }
+						if (this.interaction.commandName === "discover") {
+							this.buttons[0].data.url = this.pages[
+								this.index
+							].data.fields.filter(
+								(p) => p.name === "Invite"
+							)[0].value;
+						}
 
 						const options = this.options || this.defaultOptions;
 

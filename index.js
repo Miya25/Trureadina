@@ -42,6 +42,33 @@ client.once(Events.ClientReady, async () => {
 	client.user.setStatus("idle");
 
 	logger.success("Discord", "Connected!");
+
+	/* AUTO UPDATE USER (CRON, WIP)
+	const p = await client.guilds.cache
+		.find((p) => p.name === "Select List")
+		.members.fetch();
+
+	p.forEach(async (i) => {
+		if (i.user.bot || i.user.system) return;
+		else {
+			const user = await database.User.getUser(i.user.id);
+
+			if (!user) return;
+			else {
+				await database.User.updateUser(
+					user.user_id,
+					i.user.username,
+					user.bio,
+					i.user.displayAvatarURL(),
+					user.roles,
+					user.flags,
+					user.badges,
+					user.onboarding,
+					user.notifications
+				);
+			}
+		}
+	});*/
 });
 
 // Discord Debug Event

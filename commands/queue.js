@@ -26,9 +26,9 @@ module.exports = {
 			return i;
 		};
 
-        generateInvite = (id) => {
-            return `https://discord.com/api/oauth2/authorize?client_id=${id}&permissions=0&scope=bot%20applications.commands`;
-        };
+		generateInvite = (id) => {
+			return `https://discord.com/api/oauth2/authorize?client_id=${id}&permissions=0&scope=bot%20applications.commands`;
+		};
 
 		const embeds = bots.map((page) => {
 			return new client.EmbedBuilder().setColor("Random").addFields([
@@ -52,11 +52,11 @@ module.exports = {
 					value: String(page.state.replaceAll("_", " ")),
 					inline: false,
 				},
-                {
-                    name: "Invite",
-                    value: page.invite || generateInvite(page.bot_id),
-                    inline: false
-                },
+				{
+					name: "Invite",
+					value: page.invite || generateInvite(page.bot_id),
+					inline: false,
+				},
 				{
 					name: "Primary Owner",
 					value: `<@${page.owner}>`,
@@ -70,10 +70,10 @@ module.exports = {
 				.setCustomId(`claim-${bots[0].bot_id}`)
 				.setLabel(`Claim`)
 				.setStyle(ButtonStyle.Danger),
-            new ButtonBuilder()
-                .setURL(bots[0].invite || generateInvite(bots[0].bot_id))
-                .setLabel("Invite")
-                .setStyle(ButtonStyle.Link),
+			new ButtonBuilder()
+				.setURL(bots[0].invite || generateInvite(bots[0].bot_id))
+				.setLabel("Invite")
+				.setStyle(ButtonStyle.Link),
 		];
 
 		await new Pagination(interaction, embeds, "Page", buttons).paginate();
