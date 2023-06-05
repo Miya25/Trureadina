@@ -43,14 +43,36 @@ client.once(Events.ClientReady, async () => {
 
 	logger.success("Discord", "Connected!");
 
-	/* AUTO UPDATE USER (CRON, WIP)
-	const p = await client.guilds.cache
+	// AUTO UPDATE USER/BOT (CRON)
+	/*const p = await client.guilds.cache
 		.find((p) => p.name === "Select List")
 		.members.fetch();
 
 	p.forEach(async (i) => {
-		if (i.user.bot || i.user.system) return;
-		else {
+		if (i.user.bot || i.user.system) {
+			const bot = await database.Bots.getBot(i.user.id);
+
+			if (!bot) return;
+			else {
+				await database.Bots.updateBot(
+					bot.bot_id,
+					i.user.displayAvatarURL(),
+					i.user.username,
+					bot.description,
+					bot.long_description,
+					bot.state,
+					bot.flags,
+					bot.owner,
+					bot.extra_owners,
+					bot.library,
+					bot.nsfw,
+					bot.tags,
+					bot.invite,
+					bot.audit_logs,
+					bot.stats
+				);
+			}
+		} else {
 			const user = await database.User.getUser(i.user.id);
 
 			if (!user) return;
