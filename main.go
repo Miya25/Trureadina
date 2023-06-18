@@ -8,6 +8,9 @@ import (
 
     "github.com/bwmarrin/discordgo"
     "github.com/joho/godotenv"
+
+    "gorm.io/driver/postgres"
+    "gorm.io/gorm"
 )
 
 
@@ -21,6 +24,13 @@ func main() {
 
     // Get the bot token from environment variables.
     botToken := os.Getenv("BOT_TOKEN")
+
+    // Establish a database connection
+    dsn := "host=localhost user=your_username password=your_password dbname=your_database port=5432 sslmode=disable"
+    db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    if err != nil {
+        panic("Failed to connect to the database!")
+    }
 
     // Create a new Discord session using the bot token.
     dg, err := discordgo.New("Bot " + botToken)
@@ -47,6 +57,9 @@ func main() {
 
     // Clean up and close the Discord session.
     dg.Close()
+
+    // Close the database connection
+    db.Close()
 }
 
 func onReady(s *discordgo.Session, event *discordgo.Ready) {
