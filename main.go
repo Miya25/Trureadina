@@ -3,16 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/bwmarrin/discordgo"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
-
-	"github.com/jackc/pgx/v5/pgxpool"
-
-	"github.com/redis/go-redis/v9"
 )
 
 func main() {
