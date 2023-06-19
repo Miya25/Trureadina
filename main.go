@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
+ "github.com/infinitybotlist/eureka"
 	"os"
 	"os/signal"
 	"syscall"
