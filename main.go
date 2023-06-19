@@ -54,6 +54,24 @@ func main() {
 		return
 	}
 
+ Logger = snippets.CreateZap()
+
+ // Load dovewing state
+ baseDovewingState := dovewing.BaseState{
+      Pool:           pool,
+      Logger:         Logger,
+      Context:        Context,
+      Redis:          redis,
+      OnUpdate:       updateDb,
+      UserExpiryTime: 8 * time.Hour,
+ }
+
+ DovewingPlatformDiscord, err = dovewing.DiscordStateConfig{
+      Session:        Discord,
+      PreferredGuild: Config.Servers.Main,
+      BaseState: &baseDovewingState,
+ }.New()
+
 	// Wait for a termination signal to gracefully close the bot.
 	fmt.Println("Bot is now running. Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
