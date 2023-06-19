@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
- "github.com/infinitybotlist/eureka"
+ "github.com/infinitybotlist/eureka/dovewing"
 	"os"
 	"os/signal"
 	"syscall"
@@ -54,6 +54,18 @@ func main() {
 		return
 	}
 
+func updateDb(u *dovewing.PlatformUser) error {
+    if u.Bot {
+        _, err := pool.Exec(Context, "UPDATE bots SET queue_name = $1, queue_avatar = $2 WHERE bot_id = $3", u.Username, u.Avatar, u.ID)
+
+        if err != nil {
+            return err
+        }
+    }
+
+    return nil
+}
+
  Logger = snippets.CreateZap()
 
  // Load dovewing state
@@ -61,8 +73,8 @@ func main() {
       Pool:           pool,
       Logger:         Logger,
       Context:        Context,
-      Redis:          redis,
-      OnUpdate:       updateDb,
+      Redis:          client,
+      //OnUpdate:       updateDb,
       UserExpiryTime: 8 * time.Hour,
  }
 
