@@ -23,9 +23,6 @@ func main() {
         return
     }
 
-    // Get the bot token from environment variables.
-    botToken := os.Getenv("BOT_TOKEN")
-
 	// Create a PostgreSQL pool connection.
 	pool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
@@ -43,7 +40,7 @@ func main() {
 	client := redis.NewClient(opt)
 
     // Create a new Discord session using the bot token.
-    dg, err := discordgo.New("Bot " + botToken)
+    dg, err := discordgo.New("Bot " + os.Getenv("BOT_TOKEN"))
     if err != nil {
         fmt.Println("Error creating Discord session:", err)
         return
