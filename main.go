@@ -5,14 +5,13 @@ import (
     "os"
     "os/signal"
     "syscall"
+	"context"
 
     "github.com/bwmarrin/discordgo"
     "github.com/joho/godotenv"
 
-    "gorm.io/driver/postgres"
-    "gorm.io/gorm"
+	"github.com/jackc/pgx/v5"
 )
-
 
 func main() {
     // Load environment variables from .env file.
@@ -25,13 +24,12 @@ func main() {
     // Get the bot token from environment variables.
     botToken := os.Getenv("BOT_TOKEN")
 
-    // Establish a database connection
-    dsn := "host=localhost user=your_username password=your_password dbname=your_database port=5432 sslmode=disable"
-    db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-    if err != nil {
-        panic("Failed to connect to the database!")
-    }
-
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to PostgreSQL: %v\n", err)
+	}
+	defer conn.Close(context.Background())
+	
     // Create a new Discord session using the bot token.
     dg, err := discordgo.New("Bot " + botToken)
     if err != nil {
@@ -57,9 +55,6 @@ func main() {
 
     // Clean up and close the Discord session.
     dg.Close()
-
-    // Close the database connection
-    db.Close()
 }
 
 func onReady(s *discordgo.Session, event *discordgo.Ready) {
