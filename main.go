@@ -11,6 +11,8 @@ import (
     "github.com/joho/godotenv"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -24,11 +26,21 @@ func main() {
     // Get the bot token from environment variables.
     botToken := os.Getenv("BOT_TOKEN")
 
+	// Create a PostgreSQL pool connection.
 	pool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to PostgreSQL: %v\n", err)
+		return
 	}
 	defer pool.Close()
+
+	// Create a Redis connection
+	opt, err := redis.ParseURL(os.Getenv("REDIS_URL"));
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to Redis%v\n", err)
+		return
+	}
+	client := redis.NewClient(opt)
 
     // Create a new Discord session using the bot token.
     dg, err := discordgo.New("Bot " + botToken)
@@ -55,6 +67,12 @@ func main() {
 
     // Clean up and close the Discord session.
     dg.Close()
+
+	// Clean up and close the Database connection
+	pool.Close()
+
+	// Clean up and close the Redis connection
+	client.Close()
 }
 
 func onReady(s *discordgo.Session, event *discordgo.Ready) {
