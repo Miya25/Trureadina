@@ -10,7 +10,7 @@ import (
     "github.com/bwmarrin/discordgo"
     "github.com/joho/godotenv"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
@@ -24,12 +24,12 @@ func main() {
     // Get the bot token from environment variables.
     botToken := os.Getenv("BOT_TOKEN")
 
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	pool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to PostgreSQL: %v\n", err)
 	}
-	defer conn.Close(context.Background())
-	
+	defer pool.Close()
+
     // Create a new Discord session using the bot token.
     dg, err := discordgo.New("Bot " + botToken)
     if err != nil {
