@@ -6,9 +6,9 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/infinitybotlist/eureka/dovewing"
 	"github.com/infinitybotlist/eureka/snippets"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/joho/godotenv"
-	"github.com/redis/go-redis/v9"
+	"github.com/go-redis/redis/v8"
 	"os"
 	"os/signal"
 	"syscall"
@@ -24,7 +24,7 @@ func main() {
 	}
 
 	// Create a PostgreSQL pool connection.
-	pool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
+	pool, err := pgxpool.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to PostgreSQL: %v\n", err)
 		return
@@ -34,7 +34,7 @@ func main() {
 	// Create a Redis connection
 	opt, err := redis.ParseURL(os.Getenv("REDIS_URL"))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to Redis%v\n", err)
+		fmt.Fprintf(os.Stderr, "Unable to connect to Redis: %v\n", err)
 		return
 	}
 	client := redis.NewClient(opt)
@@ -60,7 +60,7 @@ func main() {
 
 	updateDb := func(u *dovewing.PlatformUser) error {
 		if u.Bot {
-			_, err := pool.Exec(context, "UPDATE bots SET queue_name = $1, queue_avatar = $2 WHERE bot_id = $3", u.Username, u.Avatar, u.ID)
+			_, err := pool.Exec(context.Background(), "UPDATE bots SET queue_name = $1, queue_avatar = $2 WHERE bot_id = $3", u.Username, u.Avatar, u.ID)
 
 			if err != nil {
 				return err
@@ -71,12 +71,12 @@ func main() {
 	}
 
 	// Load dovewing state
-	var DovewingPlatformDiscord dovewing.DiscordState
+	var DovewingPlatformDiscord *dovewing.DiscordState
 
 	baseDovewingState := dovewing.BaseState{
 		Pool:           pool,
 		Logger:         Logger,
-		Context:        context,
+		Context:        context.Background(),
 		Redis:          client,
 		OnUpdate:       updateDb,
 		UserExpiryTime: 8 * time.Hour,
@@ -84,9 +84,14 @@ func main() {
 
 	DovewingPlatformDiscord, err = dovewing.DiscordStateConfig{
 		Session:        dg,
-		PreferredGuild: Config.Servers.Main,
+		PreferredGuild: Config.Servers.Main, // Replace with the actual value
 		BaseState:      &baseDovewingState,
 	}.New()
+
+	if err != nil {
+		fmt.Println("Error creating Dovewing state:", err)
+		return
+	}
 
 	// Wait for a termination signal to gracefully close the bot.
 	fmt.Println("Bot is now running. Press CTRL-C to exit.")
@@ -97,10 +102,10 @@ func main() {
 	// Clean up and close the Discord session.
 	dg.Close()
 
-	// Clean up and close the Database connection
+	// Clean up and close the Database connection.
 	pool.Close()
 
-	// Clean up and close the Redis connection
+	// Clean up and close the Redis connection.
 	client.Close()
 }
 
