@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/redis/go-redis/v9"
 	"github.com/infinitybotlist/eureka/dovewing"
 	"github.com/infinitybotlist/eureka/snippets"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-	"github.com/go-redis/redis/v8"
 	"os"
 	"os/signal"
 	"syscall"
@@ -24,7 +24,7 @@ func main() {
 	}
 
 	// Create a PostgreSQL pool connection.
-	pool, err := pgxpool.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	pool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to PostgreSQL: %v\n", err)
 		return
@@ -59,14 +59,7 @@ func main() {
 	var Logger = snippets.CreateZap()
 
 	updateDb := func(u *dovewing.PlatformUser) error {
-		if u.Bot {
-			_, err := pool.Exec(context.Background(), "UPDATE bots SET queue_name = $1, queue_avatar = $2 WHERE bot_id = $3", u.Username, u.Avatar, u.ID)
-
-			if err != nil {
-				return err
-			}
-		}
-
+		fmt.Println("updateCache", u)
 		return nil
 	}
 
