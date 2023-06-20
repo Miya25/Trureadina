@@ -56,11 +56,11 @@ func main() {
 		return
 	}
 
-        Logger = snippets.CreateZap()
+	var Logger = snippets.CreateZap()
 
 	updateDb := func(u *dovewing.PlatformUser) error {
 		if u.Bot {
-			_, err := pool.Exec(Context, "UPDATE bots SET queue_name = $1, queue_avatar = $2 WHERE bot_id = $3", u.Username, u.Avatar, u.ID)
+			_, err := pool.Exec(context, "UPDATE bots SET queue_name = $1, queue_avatar = $2 WHERE bot_id = $3", u.Username, u.Avatar, u.ID)
 
 			if err != nil {
 				return err
@@ -71,10 +71,12 @@ func main() {
 	}
 
 	// Load dovewing state
+	var DovewingPlatformDiscord dovewing.DiscordState
+
 	baseDovewingState := dovewing.BaseState{
 		Pool:           pool,
 		Logger:         Logger,
-		Context:        Context,
+		Context:        context,
 		Redis:          client,
 		OnUpdate:       updateDb,
 		UserExpiryTime: 8 * time.Hour,

@@ -31,4 +31,4 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 )
 
-replace github.com/bwmarrin/discordgo => ../dgo-patch
+replace github.com/bwmarrin/discordgo => ./discordgo
