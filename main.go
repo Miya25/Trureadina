@@ -4,16 +4,19 @@ import (
 	"context"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"github.com/redis/go-redis/v9"
 	"github.com/infinitybotlist/eureka/dovewing"
 	"github.com/infinitybotlist/eureka/snippets"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 )
+
+var DovewingPlatformDiscord *dovewing.DiscordState
+var dg *discordgo.Session
 
 func main() {
 	// Load environment variables from .env file.
@@ -40,7 +43,7 @@ func main() {
 	client := redis.NewClient(opt)
 
 	// Create a new Discord session using the bot token.
-	dg, err := discordgo.New("Bot " + os.Getenv("BOT_TOKEN"))
+	dg, err = discordgo.New("Bot " + os.Getenv("BOT_TOKEN"))
 	if err != nil {
 		fmt.Println("Error creating Discord session:", err)
 		return
@@ -63,9 +66,6 @@ func main() {
 		return nil
 	}
 
-	// Load dovewing state
-	var DovewingPlatformDiscord *dovewing.DiscordState
-
 	baseDovewingState := dovewing.BaseState{
 		Pool:           pool,
 		Logger:         Logger,
@@ -77,7 +77,7 @@ func main() {
 
 	DovewingPlatformDiscord, err = dovewing.DiscordStateConfig{
 		Session:        dg,
-		PreferredGuild: Config.Servers.Main, // Replace with the actual value
+		PreferredGuild: os.Getenv("MAIN_SERVER"),
 		BaseState:      &baseDovewingState,
 	}.New()
 
