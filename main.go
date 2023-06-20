@@ -59,6 +59,10 @@ func main() {
 		return
 	}
 
+	// Set the presence/status of bot profile
+	dg.UpdateWatchStatus(0, "for updates.")
+
+	// Initalize Dovewing
 	var Logger = snippets.CreateZap()
 
 	updateDb := func(u *dovewing.PlatformUser) error {
@@ -87,7 +91,7 @@ func main() {
 	}
 
 	// Wait for a termination signal to gracefully close the bot.
-	fmt.Println("Bot is now running. Press CTRL-C to exit.")
+	fmt.Println("Trureadina is now running. Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
