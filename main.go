@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/infinitybotlist/eureka/dovewing"
+	"github.com/infinitybotlist/eureka/snippets"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
- "github.com/infinitybotlist/eureka/dovewing"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -54,35 +56,35 @@ func main() {
 		return
 	}
 
-func updateDb(u *dovewing.PlatformUser) error {
-    if u.Bot {
-        _, err := pool.Exec(Context, "UPDATE bots SET queue_name = $1, queue_avatar = $2 WHERE bot_id = $3", u.Username, u.Avatar, u.ID)
+        Logger = snippets.CreateZap()
 
-        if err != nil {
-            return err
-        }
-    }
+	updateDb := func(u *dovewing.PlatformUser) error {
+		if u.Bot {
+			_, err := pool.Exec(Context, "UPDATE bots SET queue_name = $1, queue_avatar = $2 WHERE bot_id = $3", u.Username, u.Avatar, u.ID)
 
-    return nil
-}
+			if err != nil {
+				return err
+			}
+		}
 
- Logger = snippets.CreateZap()
+		return nil
+	}
 
- // Load dovewing state
- baseDovewingState := dovewing.BaseState{
-      Pool:           pool,
-      Logger:         Logger,
-      Context:        Context,
-      Redis:          client,
-      //OnUpdate:       updateDb,
-      UserExpiryTime: 8 * time.Hour,
- }
+	// Load dovewing state
+	baseDovewingState := dovewing.BaseState{
+		Pool:           pool,
+		Logger:         Logger,
+		Context:        Context,
+		Redis:          client,
+		OnUpdate:       updateDb,
+		UserExpiryTime: 8 * time.Hour,
+	}
 
- DovewingPlatformDiscord, err = dovewing.DiscordStateConfig{
-      Session:        Discord,
-      PreferredGuild: Config.Servers.Main,
-      BaseState: &baseDovewingState,
- }.New()
+	DovewingPlatformDiscord, err = dovewing.DiscordStateConfig{
+		Session:        dg,
+		PreferredGuild: Config.Servers.Main,
+		BaseState:      &baseDovewingState,
+	}.New()
 
 	// Wait for a termination signal to gracefully close the bot.
 	fmt.Println("Bot is now running. Press CTRL-C to exit.")
