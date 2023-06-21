@@ -1,0 +1,5 @@
+port: # Port to run the webserver on
+postgres_url: # PostgreSQL URL
+redis_url: # Redis URL
+discord_token: # Discord Bot Token
+main_server: # Main server ID
