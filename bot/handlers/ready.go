@@ -1,4 +1,4 @@
-package handlers;
+package handlers
 
 import (
 	"Trureadina/state"
@@ -7,7 +7,7 @@ import (
 
 func Ready(s *discordgo.Session, event *discordgo.Ready) {
 	// Tell the console that we officially logged into Discord.
-	state.Logger.Info("Logged in as %s\n", event.User.String())
+	state.Logger.Info("Logged in as " + event.User.String())
 
 	// Set the presence/status of bot profile
 	state.Discord.UpdateWatchStatus(0, "Select List")
