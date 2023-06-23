@@ -66,7 +66,7 @@ func Setup() {
 	}
 
 	// Setup Dovewing
-	Logger.Fatalln("=> Setting up Dovewing")
+	Logger.Info("=> Setting up Dovewing")
 	err = setupDovewing()
 
 	if err != nil {
