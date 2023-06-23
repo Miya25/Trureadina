@@ -8,4 +8,7 @@ import (
 func CreateBot() {
 	// Add a handler for the "ready" event.
 	state.Discord.AddHandler(handlers.Ready)
+
+ // Open Websocket Connection
+ state.Discord.Open();
 }
