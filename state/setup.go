@@ -81,12 +81,6 @@ func createDiscordSession() (*discordgo.Session, error) {
 		return nil, err
 	}
 
-	// Open a websocket connection to Discord.
-	err = dg.Open()
-	if err != nil {
-		return nil, errors.New("error opening connection: " + err.Error())
-	}
-
 	return dg, nil
 }
 
