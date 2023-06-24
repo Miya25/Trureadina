@@ -2,6 +2,7 @@ package main
 
 import (
 	"Trureadina/bot"
+	"Trureadina/bot/cmds"
 	"Trureadina/cmd"
 	"Trureadina/state"
 	"os"
@@ -11,6 +12,8 @@ import (
 
 func main() {
 	state.Setup()
+
+	cmds.Register()
 
 	if len(os.Args) > 1 {
 		cmd.RunCommand()
