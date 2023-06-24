@@ -1,4 +1,4 @@
-package deploycmd
+package deploy
 
 import (
 	"errors"

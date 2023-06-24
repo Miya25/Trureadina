@@ -6,6 +6,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func PresenceUpdate(s *discordgo.Session, event *discordgo.PresenceUpdate) {
+func MessageCreate(s *discordgo.Session, event *discordgo.MessageCreate) {
 	fmt.Printf("%+v\n", event)
 } // def a wip, totally.

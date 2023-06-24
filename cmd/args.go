@@ -1,7 +1,9 @@
 package cmd
 
 import (
-	"Trureadina/cmd/deploycmd"
+	"Trureadina/cmd/deploy"
+	"Trureadina/cmd/deregister"
+
 	"fmt"
 	"os"
 
@@ -22,9 +24,14 @@ func init() {
 	// We use a init function here to avoid circular imports
 	Commands = []Command{
 		{
-			Name:        "deploycmds",
+			Name:        "deploy",
 			Description: "Deploy app commands",
-			Run:         deploycmd.Cmd,
+			Run:         deploy.Cmd,
+		},
+		{
+			Name:        "deregister",
+			Description: "Unregister all app commands",
+			Run:         deregister.Cmd,
 		},
 		{
 			Name:        "help",

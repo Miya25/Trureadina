@@ -4,7 +4,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-// STILL A WIP
 type Command struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`

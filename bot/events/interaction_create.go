@@ -7,5 +7,5 @@ import (
 )
 
 func InteractionCreate(s *discordgo.Session, event *discordgo.InteractionCreate) {
-	fmt.Println(event)
+	fmt.Printf("%+v\n", event)
 } // def a wip, totally.
