@@ -2,6 +2,7 @@ package deploycmd
 
 import (
 	"errors"
+	"fmt"
 
 	"Trureadina/bot/handler"
 	"Trureadina/state"
@@ -48,7 +49,7 @@ func Cmd() error {
 		if err != nil {
 			return errors.New("Error registering command: " + err.Error())
 		} else {
-			return errors.New("Command registered successfully: " + cmd.Name)
+			fmt.Println("=> "+cmd.Name, "[success]")
 		}
 	}
 
