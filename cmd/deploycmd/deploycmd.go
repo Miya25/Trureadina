@@ -10,6 +10,12 @@ import (
 )
 
 func Cmd() error {
+	ca, err := state.Discord.Application("@me")
+
+	if err != nil {
+		return err
+	}
+
 	for _, cmd := range handler.Commands {
 		// Create the ApplicationCommand struct from the parsed command data.
 		applicationCommand := discordgo.ApplicationCommand{
@@ -38,7 +44,7 @@ func Cmd() error {
 		}
 
 		// Register the command with Discord.
-		_, err := state.Discord.ApplicationCommandCreate(state.Discord.State.User.ID, "", &applicationCommand)
+		_, err := state.Discord.ApplicationCommandCreate(ca.ID, "", &applicationCommand)
 		if err != nil {
 			return errors.New("Error registering command: " + err.Error())
 		} else {
