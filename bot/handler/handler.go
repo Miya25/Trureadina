@@ -26,7 +26,7 @@ type Choice struct {
 
 type CommandList []Command
 
-func (c *CommandList) AddCommand(cmd Command) {
+func (c *CommandList) Register(cmd Command) {
 	*c = append(*c, cmd)
 }
 
