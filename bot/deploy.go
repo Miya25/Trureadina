@@ -3,7 +3,6 @@ package bot
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -32,7 +31,7 @@ type Choice struct {
 
 func registerInteractionCommands(s *discordgo.Session) {
 	// Get the list of files in the "commands" directory.
-	files, err := ioutil.ReadDir("commands")
+	files, err := os.ReadDir("commands")
 	if err != nil {
 		fmt.Println("Error reading command files:", err)
 		return
@@ -46,7 +45,7 @@ func registerInteractionCommands(s *discordgo.Session) {
 
 		// Read the command data from the file.
 		filePath := filepath.Join("commands", file.Name())
-		data, err := ioutil.ReadFile(filePath)
+		data, err := os.ReadFile(filePath)
 		if err != nil {
 			fmt.Println("Error reading command file:", err)
 			continue
@@ -93,7 +92,7 @@ func registerCommand(s *discordgo.Session, commandData CommandData) {
 	}
 
 	// Register the command with Discord.
-	_, err := s.ApplicationCommandCreate(s.State.User.ID, "YOUR_GUILD_ID", &applicationCommand)
+	_, err := s.ApplicationCommandCreate(s.State.User.ID, "", &applicationCommand)
 	if err != nil {
 		fmt.Println("Error registering command:", err)
 	} else {
