@@ -1,16 +1,16 @@
 package bot
 
 import (
-	"Trureadina/bot/handlers"
+	"Trureadina/bot/events"
 	"Trureadina/state"
 )
 
 func CreateBot() {
 	// Add event handlers
-	state.Discord.AddHandler(handlers.Ready)          // Ready
-	state.Discord.AddHandler(handlers.PresenceUpdate) // Presence Update
-	state.Discord.AddHandler(handlers.InteractionCreate) // Interaction Create
-	
+	state.Discord.AddHandler(events.Ready)             // Ready
+	state.Discord.AddHandler(events.PresenceUpdate)    // Presence Update
+	state.Discord.AddHandler(events.InteractionCreate) // Interaction Create
+
 	// Open Websocket Connection
 	state.Discord.Open()
 }

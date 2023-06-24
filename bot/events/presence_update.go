@@ -1,7 +1,8 @@
-package handlers
+package events
 
 import (
 	"fmt"
+
 	"github.com/bwmarrin/discordgo"
 )
 

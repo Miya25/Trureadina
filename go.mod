@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/bwmarrin/discordgo v0.27.1
+	github.com/fatih/color v1.15.0
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/infinitybotlist/eureka v0.0.0-20230619185914-86d810f662ff
 	github.com/jackc/pgx/v5 v5.4.1
@@ -23,6 +24,8 @@ require (
 	github.com/jackc/puddle/v2 v2.2.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/leodido/go-urn v1.2.2 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect

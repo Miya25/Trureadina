@@ -2,6 +2,7 @@ package main
 
 import (
 	"Trureadina/bot"
+	"Trureadina/cmd"
 	"Trureadina/state"
 	"os"
 	"os/signal"
@@ -10,6 +11,11 @@ import (
 
 func main() {
 	state.Setup()
+
+	if len(os.Args) > 1 {
+		cmd.RunCommand()
+		return
+	}
 
 	bot.CreateBot()
 

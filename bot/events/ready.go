@@ -1,7 +1,8 @@
-package handlers
+package events
 
 import (
 	"Trureadina/state"
+
 	"github.com/bwmarrin/discordgo"
 )
 
