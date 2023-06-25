@@ -20,22 +20,16 @@ func main() {
 		return
 	}
 
-	bot.CreateBot()
+	if err := bot.CreateBot(); err != nil {
+		state.Logger.Errorln("Failed to create bot:", err)
+		return
+	}
 
-	done := make(chan struct{})
+	exitSignal := make(chan os.Signal, 1)
+	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	s := <-exitSignal
 
-	go func() {
-		sc := make(chan os.Signal, 1)
-		signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-		s := <-sc
-
-		state.Logger.Errorln("Recieved", s, "signal. Closing...")
-		state.Close()
-		state.Logger.Info("Closed open state connections. Exiting...")
-
-		close(done)
-	}()
-
-	<-done
-	state.Logger.Info("Recieved done channel close. Exiting...")
+	state.Logger.Errorln("Received", s, "signal. Closing...")
+	state.Close()
+	state.Logger.Info("Closed open state connections. Exiting...")
 }

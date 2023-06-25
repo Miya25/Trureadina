@@ -1,19 +1,25 @@
 package state
 
+import (
+	"log"
+)
+
 func Close() {
-	Logger.Info("Closing connections...")
+	log.Println("Closing connections...")
 
-	err := Discord.Close()
-
-	if err != nil {
-		Logger.Error("Error closing Discord session:", err)
+	if Discord != nil {
+		if err := Discord.Close(); err != nil {
+			log.Println("Error closing Discord session:", err)
+		}
 	}
 
-	Postgres.Close()
+	if Postgres != nil {
+		Postgres.Close()
+	}
 
-	err = Redis.Close()
-
-	if err != nil {
-		Logger.Error("Error closing Redis client:", err)
+	if Redis != nil {
+		if err := Redis.Close(); err != nil {
+			log.Println("Error closing Redis client:", err)
+		}
 	}
 }

@@ -1,31 +1,26 @@
 package deploy
 
 import (
-	"errors"
 	"fmt"
-
+	"github.com/pkg/errors"
 	"Trureadina/bot/handler"
 	"Trureadina/state"
-
 	"github.com/bwmarrin/discordgo"
 )
 
 func Cmd() error {
 	ca, err := state.Discord.Application("@me")
-
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to retrieve application information")
 	}
 
 	for _, cmd := range handler.Commands {
-		// Create the ApplicationCommand struct from the parsed command data.
 		applicationCommand := discordgo.ApplicationCommand{
 			Name:        cmd.Name,
 			Description: cmd.Description,
 			Options:     make([]*discordgo.ApplicationCommandOption, len(cmd.Options)),
 		}
 
-		// Convert each Option from the parsed command data.
 		for i, option := range cmd.Options {
 			choices := make([]*discordgo.ApplicationCommandOptionChoice, len(option.Choices))
 			for j, choice := range option.Choices {
@@ -44,13 +39,12 @@ func Cmd() error {
 			}
 		}
 
-		// Register the command with Discord.
 		_, err := state.Discord.ApplicationCommandCreate(ca.ID, "", &applicationCommand)
 		if err != nil {
-			return errors.New("Error registering command: " + err.Error())
-		} else {
-			fmt.Println("=> "+cmd.Name, "[success]")
+			return errors.Wrapf(err, "Failed to register command '%s'", cmd.Name)
 		}
+
+		state.Logger.Infof("Registered command '%s'", cmd.Name)
 	}
 
 	return nil
